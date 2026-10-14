@@ -1,0 +1,164 @@
+#!/bin/bash
+# Create one project workspace, or return to the workspace already running.
+set -euo pipefail
+
+if [[ ${1:-} == --help || ${1:-} == -h ]]; then
+    echo 'Usage: dev PROJECT or dev SESSION DIRECTORY'
+    echo 'Examples: dev project; dev component; dev collection/component'
+    echo 'Named workspace: dev component ~/repo/collection'
+    echo 'List existing sessions on this machine: dev -l (or dev --list)'
+    echo 'A short name finds a uniquely named Git repository below ~/repo.'
+    echo 'Optional environment: DEV_REPO_ROOT, DEV_COMMAND (executable), DEV_SHELL.'
+    exit 0
+fi
+
+# Respect the caller PATH; fill in missing tools for non-interactive macOS SSH.
+require_command() {
+    if command -v "$1" >/dev/null; then return; fi
+    local candidate
+    for candidate in "$HOME/.local/bin" /opt/homebrew/bin /usr/local/bin; do
+        if [[ -x $candidate/$1 ]]; then
+            export PATH="$PATH:$candidate"
+            return
+        fi
+    done
+    echo "Required executable not found: $1" >&2
+    return 1
+}
+require_command tmux
+if [[ $# == 1 && ( $1 == -l || $1 == --list ) ]]; then
+    printf 'Sessions on %s\n\n' "$(hostname -s)"
+    if sessions=$(tmux list-sessions -F $'#{session_name}\t#{?session_attached,attached,detached}\t#{session_windows}\t#{?@dev-directory,#{@dev-directory},#{session_path}}' 2>&1); then
+        printf '%s\n' "$sessions" | awk -F '\t' '
+            BEGIN { name_width = 7; status_width = 6; window_width = 7 }
+            {
+                names[NR] = $1; states[NR] = $2; windows[NR] = $3
+                paths[NR] = $4
+                user_dir = ENVIRON["HOME"]
+                if ($4 == user_dir) paths[NR] = "~"
+                else if (index($4, user_dir "/") == 1)
+                    paths[NR] = "~" substr($4, length(user_dir) + 1)
+                if (length($1) > name_width) name_width = length($1)
+                if (length($2) > status_width) status_width = length($2)
+                if (length($3) > window_width) window_width = length($3)
+            }
+            END {
+                printf "  %-*s  %-*s  %*s  %s\n", name_width, "SESSION", status_width, "STATUS", window_width, "WINDOWS", "START DIRECTORY"
+                for (i = 1; i <= NR; i++)
+                    printf "  %-*s  %-*s  %*s  %s\n", name_width, names[i], status_width, states[i], window_width, windows[i], paths[i]
+            }
+        '
+    else
+        case "$sessions" in
+            *'no server running'*|*'No such file or directory'*|*'no sessions'*)
+                echo 'No sessions yet. Start one with: dev SESSION DIRECTORY' ;;
+            *) printf '%s\n' "$sessions" >&2; exit 1 ;;
+        esac
+    fi
+    exit 0
+fi
+if [[ $# -lt 1 || $# -gt 2 || ! $1 =~ ^[a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)*$ ]]; then
+    echo 'Usage: dev PROJECT or dev SESSION DIRECTORY' >&2
+    exit 1
+fi
+
+connect() {
+    if [[ -n ${TMUX:-} ]]; then
+        exec tmux switch-client -t "=$project"
+    else
+        exec tmux attach-session -t "=$project"
+    fi
+}
+
+# A name alone also returns to an explicitly named work session.
+project=$1
+if [[ $# == 1 && $project != */* ]] && tmux has-session -t "=$project" 2>/dev/null; then
+    connect
+fi
+if [[ $# == 2 ]]; then
+    [[ $1 != */* ]] || { echo 'Session names cannot contain slashes.' >&2; exit 1; }
+    project=$1
+    [[ -d $2 ]] || { echo "Working directory not found: $2" >&2; exit 1; }
+    directory=$(cd -- "$2" && pwd -P)
+else
+    repo_root=${DEV_REPO_ROOT:-$HOME/repo}
+    relative=$1
+    if [[ ! -d $repo_root/$relative && $relative != */* ]]; then
+        require_command python3
+        relative=$(python3 - "$relative" "$repo_root" <<'PY'
+from pathlib import Path
+import os
+import sys
+
+root = Path(sys.argv[2])
+name = sys.argv[1]
+skip = {'node_modules', '.venv', 'venv', 'vendor', 'dist', 'build', 'target', '__pycache__'}
+matches = []
+for parent, dirs, files in os.walk(root):
+    path = Path(parent)
+    if path.name == name and ('.git' in dirs or '.git' in files):
+        matches.append(str(path.relative_to(root)))
+    dirs[:] = [d for d in dirs if not d.startswith('.') and d not in skip]
+if len(matches) != 1:
+    if matches:
+        print('Multiple repositories match; use an explicit path:', file=sys.stderr)
+        for match in sorted(matches):
+            print(f'  dev {match}', file=sys.stderr)
+    else:
+        print(f'Project directory not found: {root / name}', file=sys.stderr)
+    sys.exit(1)
+print(matches[0])
+PY
+        )
+    fi
+    [[ $relative =~ ^[a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)*$ ]] || {
+        echo 'Project path must contain only letters, numbers, hyphens, underscores, and slashes.' >&2
+        exit 1
+    }
+    project=${relative//\//--}
+    directory="$repo_root/$relative"
+fi
+# Normalize paths so symlinks and relative spellings reconnect consistently.
+if [[ -d $directory ]]; then
+    directory=$(cd -- "$directory" && pwd -P)
+fi
+
+# Preserve every pane and process when returning to an existing project.
+if tmux has-session -t "=$project" 2>/dev/null; then
+    # Prevent two distinct paths with the same flattened name from colliding.
+    recorded=$(tmux show-options -qv -t "$project" @dev-directory)
+    if [[ -d $recorded ]]; then
+        recorded=$(cd -- "$recorded" && pwd -P)
+    fi
+    if [[ -n $recorded && $recorded != "$directory" ]]; then
+        echo "Session name already belongs to another directory: $recorded" >&2
+        exit 1
+    fi
+    connect
+fi
+[[ -d $directory ]] || { echo "Project directory not found: $directory" >&2; exit 1; }
+agent_command=${DEV_COMMAND:-codex}
+shell_command=${DEV_SHELL:-${SHELL:-/bin/sh}}
+require_command "$agent_command"
+require_command "$shell_command"
+agent_command=$(command -v "$agent_command")
+shell_command=$(command -v "$shell_command")
+
+# Size the initial detached workspace for this terminal before splitting.
+rows=40
+columns=160
+if [[ -t 0 ]]; then
+    read -r rows columns < <(stty size)
+    (( rows > 0 && columns > 0 )) || { rows=40; columns=160; }
+fi
+
+# Capture a stable pane ID rather than assuming window/pane numbering.
+# Returning to zsh after Codex exits keeps the left pane available.
+left=$(tmux new-session -d -P -F '#{pane_id}' -s "$project" \
+    -n development -c "$directory" -x "$columns" -y "$rows" \
+    -e "PATH=$PATH" /bin/bash -c '"$1"; exec "$2" -l' dev "$agent_command" "$shell_command")
+tmux set-option -t "$project" @dev-directory "$directory"
+tmux split-window -h -d -l 35% -t "$left" -c "$directory" \
+    -e "PATH=$PATH" "$shell_command" -l
+tmux select-pane -t "$left"
+connect
