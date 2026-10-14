@@ -25,6 +25,7 @@ To take just this tool elsewhere, copy `dev/` and run its `./install.sh`.
 | Package | Installation changes |
 | --- | --- |
 | [dev](dev/README.md) | One executable in your selected bin directory. |
+| [repo-tools](repo-tools/README.md) | Three commands in your bin directory plus a shared runtime under its sibling `share/dev-tools/` directory. |
 | [terminal](terminal/README.md) | Optional managed blocks in `.zshrc` and `.tmux.conf`, with backups. |
 
 Terminal appearance is optional and independent of dev. It accepts an external
@@ -33,6 +34,20 @@ live outside this repo.
 
 Supported target: macOS. Other platforms have not been verified. Each package
 lists its own requirements, installation, update, and removal instructions.
+
+## Coordinate a collection of repositories
+
+```sh
+./repo-tools/install.sh
+cd /path/to/collection
+repo-status
+repo-branch --dry-run feature/example
+repo-push --dry-run
+```
+
+The package includes `repo-status`, `repo-branch`, and `repo-push`. It scans only
+immediate child repositories. Branch creation and pushing are explicit operations;
+read [repo-tools/README.md](repo-tools/README.md) for behavior and validation.
 
 ## Everyday reference
 
@@ -46,8 +61,12 @@ With tmux, Python 3, and zsh available:
 ```sh
 python3 dev/tests/smoke.py
 python3 terminal/tests/smoke.py
+python3 repo-tools/repo-status/test_repo_status.py
+python3 repo-tools/repo-branch/test_repo_branch.py
+python3 repo-tools/repo-push/test_repo_push.py
+python3 repo-tools/tests/test_install.py
 ```
 
 The checks use temporary installations, separate tmux sockets, generated color
-profiles, and harmless command stubs. They do not attach to existing sessions
+profiles, harmless command stubs, and local-only bare Git remotes. They do not attach to existing sessions
 or change your live shell/terminal configuration.

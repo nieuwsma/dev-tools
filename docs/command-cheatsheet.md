@@ -78,3 +78,24 @@ tmux source-file ~/.tmux.conf
 [Optional terminal setup](../terminal/README.md) adds a hostname prompt, session
 labels, current-directory display, mouse support, and window titles. Personal
 network details and host profiles are intentionally external to these tools.
+
+
+## Collections of Git repositories
+
+Install the [repo-tools package](../repo-tools/README.md), then run from a
+collection directory:
+
+```sh
+repo-status
+repo-status /path/to/collection
+repo-branch --dry-run feature/example
+repo-branch feature/example
+# Commit changes separately inside the repositories when ready.
+repo-push --dry-run
+repo-push
+```
+
+Only immediate child Git repositories are included. `repo-status` does not fetch;
+its divergence is based on local upstream refs. The dry runs make no branch or
+remote changes. A real `repo-push` pushes existing commits; it does not commit
+uncommitted work or force-push.
