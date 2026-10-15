@@ -1,3 +1,6 @@
+<!-- Copyright 2026 Nieuwsma Services LLC
+     SPDX-License-Identifier: Apache-2.0 -->
+
 # Development tools
 
 Small, independently installable tools for terminal-based development. Install
@@ -84,3 +87,9 @@ python3 repo-tools/tests/test_install.py
 The checks use temporary installations, separate tmux sockets, generated color
 profiles, harmless command stubs, and local-only bare Git remotes. They do not attach to existing sessions
 or change your live shell/terminal configuration.
+
+## License
+
+Copyright 2026 Nieuwsma Services LLC.
+
+Licensed under the [Apache License, Version 2.0](LICENSE). See [NOTICE](NOTICE).

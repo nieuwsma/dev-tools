@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2026 Nieuwsma Services LLC
+# SPDX-License-Identifier: Apache-2.0
+
 # Create one project workspace, or return to the workspace already running.
 set -euo pipefail
 

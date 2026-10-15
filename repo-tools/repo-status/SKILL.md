@@ -3,6 +3,9 @@ name: repo-status
 description: Report the current branch, working-tree cleanliness, tracked upstream, and ahead/behind divergence for every Git repository directly under this workspace. Use when the user asks where the workspace repositories currently stand; do not use it to modify repositories.
 ---
 
+<!-- Copyright 2026 Nieuwsma Services LLC
+     SPDX-License-Identifier: Apache-2.0 -->
+
 # Repo Status
 
 Use this skill for a concise, read-only snapshot of the repositories directly

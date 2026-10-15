@@ -1,3 +1,6 @@
+<!-- Copyright 2026 Nieuwsma Services LLC
+     SPDX-License-Identifier: Apache-2.0 -->
+
 # repo-tools
 
 Bash commands for coordinating work across a directory of Git repositories.

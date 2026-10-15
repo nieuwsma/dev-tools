@@ -1,3 +1,6 @@
+# Copyright 2026 Nieuwsma Services LLC
+# SPDX-License-Identifier: Apache-2.0
+
 from pathlib import Path
 import os
 import subprocess

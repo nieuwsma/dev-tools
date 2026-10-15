@@ -1,3 +1,6 @@
+# Copyright 2026 Nieuwsma Services LLC
+# SPDX-License-Identifier: Apache-2.0
+
 # Shared helpers compatible with macOS's Bash 3.2.
 
 # Populate the caller's repos array with immediate child repositories only.

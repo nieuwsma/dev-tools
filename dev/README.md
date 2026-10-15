@@ -1,3 +1,6 @@
+<!-- Copyright 2026 Nieuwsma Services LLC
+     SPDX-License-Identifier: Apache-2.0 -->
+
 # dev: named development workspaces
 
 Give a work session a name and choose its starting directory independently:

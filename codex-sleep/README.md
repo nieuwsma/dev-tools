@@ -1,3 +1,6 @@
+<!-- Copyright 2026 Nieuwsma Services LLC
+     SPDX-License-Identifier: Apache-2.0 -->
+
 # codex-sleep: resume a Codex session at a clock time
 
 Wait until a usage window resets, then resume a named Codex session in the current directory:

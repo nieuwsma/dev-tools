@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Nieuwsma Services LLC
+# SPDX-License-Identifier: Apache-2.0
+
 """Install and time-math checks. No sleep, Codex, or live shell changes."""
 from pathlib import Path
 import hashlib

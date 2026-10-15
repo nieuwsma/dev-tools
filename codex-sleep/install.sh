@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2026 Nieuwsma Services LLC
+# SPDX-License-Identifier: Apache-2.0
+
 # Install only codex-sleep. No shell, tmux, or machine settings are changed.
 set -euo pipefail
 

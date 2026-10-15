@@ -1,3 +1,6 @@
+<!-- Copyright 2026 Nieuwsma Services LLC
+     SPDX-License-Identifier: Apache-2.0 -->
+
 # repo-branch
 
 Create and switch to the same new branch name in every immediate child Git

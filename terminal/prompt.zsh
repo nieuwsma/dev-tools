@@ -1,3 +1,6 @@
+# Copyright 2026 Nieuwsma Services LLC
+# SPDX-License-Identifier: Apache-2.0
+
 # Keep the existing theme, including its directory and Git information.
 _machine_identity_color='@PROMPT_COLOR@'
 

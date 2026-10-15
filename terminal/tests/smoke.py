@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Nieuwsma Services LLC
+# SPDX-License-Identifier: Apache-2.0
+
 """Generate independent terminal configs and load them in disposable tmux servers."""
 from pathlib import Path
 import json

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Nieuwsma Services LLC
+# SPDX-License-Identifier: Apache-2.0
+
 """Integration checks against a disposable tmux server; no real agent calls."""
 from pathlib import Path
 import hashlib

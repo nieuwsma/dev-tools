@@ -1,3 +1,6 @@
+<!-- Copyright 2026 Nieuwsma Services LLC
+     SPDX-License-Identifier: Apache-2.0 -->
+
 # Everyday terminal commands
 
 A running reference for the tools and terminal techniques in this repo.

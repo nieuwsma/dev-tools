@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2026 Nieuwsma Services LLC
+# SPDX-License-Identifier: Apache-2.0
+
 # Copy the shared repo-tools bundle and install three independent entry points.
 set -euo pipefail
 

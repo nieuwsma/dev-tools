@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright 2026 Nieuwsma Services LLC
+# SPDX-License-Identifier: Apache-2.0
+
 # Wait until a local clock time, then resume a Codex session in this directory.
 set -euo pipefail
 

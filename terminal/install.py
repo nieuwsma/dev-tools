@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Nieuwsma Services LLC
+# SPDX-License-Identifier: Apache-2.0
+
 """Install optional zsh/tmux styling. Does not install dev or require a known host."""
 
 import argparse

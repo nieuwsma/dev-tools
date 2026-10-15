@@ -1,3 +1,6 @@
+<!-- Copyright 2026 Nieuwsma Services LLC
+     SPDX-License-Identifier: Apache-2.0 -->
+
 # repo-push
 
 Push the current branch's existing commits in every immediate child Git repo:

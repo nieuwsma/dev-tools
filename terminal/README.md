@@ -1,3 +1,6 @@
+<!-- Copyright 2026 Nieuwsma Services LLC
+     SPDX-License-Identifier: Apache-2.0 -->
+
 # Optional terminal identity
 
 Add a hostname to an existing zsh prompt, a host/session label and active-pane
