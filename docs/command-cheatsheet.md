@@ -28,6 +28,17 @@ codex-sleep translation-studio 1:49am --caffeinate
 The second form holds the Mac awake. Leave it off inside tmux when the Mac
 already stays awake. Full behavior: [codex-sleep](../codex-sleep/README.md).
 
+## Local Kind cost
+
+```sh
+kat                         # Live view of kind-* contexts
+kat --sort cpu              # Sort by CPU instead of memory
+kat --json --filter rack    # One machine-readable snapshot
+```
+
+`m`, `c`, and `n` change the live sort. `[` and `]` change the hierarchy level.
+Full behavior: [kat](../kat/README.md).
+
 ## tmux navigation
 
 Press Ctrl+B, release, then press the second key:

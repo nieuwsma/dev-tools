@@ -30,6 +30,7 @@ To take just this tool elsewhere, copy `dev/` and run its `./install.sh`.
 | [dev](dev/README.md) | One executable in your selected bin directory. |
 | [repo-tools](repo-tools/README.md) | Three commands in your bin directory plus a shared runtime under its sibling `share/dev-tools/` directory. |
 | [codex-sleep](codex-sleep/README.md) | One executable in your selected bin directory. |
+| [kat](kat/README.md) | One executable in your selected bin directory. The installer builds it with Go. |
 | [terminal](terminal/README.md) | Optional managed blocks in `.zshrc` and `.tmux.conf`, with backups. |
 
 Terminal appearance is optional and independent of dev. It accepts an external
@@ -65,6 +66,17 @@ Run it from the repository Codex should continue. It sleeps until that local
 time plus one minute, then resumes the named session. Add `--caffeinate` only
 when this Mac might sleep. Details: [codex-sleep/README.md](codex-sleep/README.md).
 
+## See which local Kind apps are expensive
+
+```sh
+./kat/install.sh
+kat
+kat --json --filter rack
+```
+
+`kat` needs Go to build and `kubectl` to run. It reads every `kind-*` context.
+Details: [kat/README.md](kat/README.md).
+
 ## Everyday reference
 
 [Command cheat sheet](docs/command-cheatsheet.md): launch, reconnect, scrolling,
@@ -77,6 +89,7 @@ With tmux, Python 3, and zsh available:
 ```sh
 python3 dev/tests/smoke.py
 python3 codex-sleep/tests/smoke.py
+go test ./kat/
 python3 terminal/tests/smoke.py
 python3 repo-tools/repo-status/test_repo_status.py
 python3 repo-tools/repo-branch/test_repo_branch.py
