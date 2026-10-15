@@ -15,6 +15,16 @@ New sessions start Codex (or `DEV_COMMAND`) beside a shell. Use a separate
 terminal window per work session. Full behavior and optional settings:
 [dev](../dev/README.md).
 
+To resume a named Codex session when a usage window resets, from that repo:
+
+```sh
+codex-sleep translation-studio 1:49am
+codex-sleep translation-studio 1:49am --caffeinate
+```
+
+The second form holds the Mac awake. Leave it off inside tmux when the Mac
+already stays awake. Full behavior: [codex-sleep](../codex-sleep/README.md).
+
 ## tmux navigation
 
 Press Ctrl+B, release, then press the second key:

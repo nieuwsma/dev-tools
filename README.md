@@ -26,6 +26,7 @@ To take just this tool elsewhere, copy `dev/` and run its `./install.sh`.
 | --- | --- |
 | [dev](dev/README.md) | One executable in your selected bin directory. |
 | [repo-tools](repo-tools/README.md) | Three commands in your bin directory plus a shared runtime under its sibling `share/dev-tools/` directory. |
+| [codex-sleep](codex-sleep/README.md) | One executable in your selected bin directory. |
 | [terminal](terminal/README.md) | Optional managed blocks in `.zshrc` and `.tmux.conf`, with backups. |
 
 Terminal appearance is optional and independent of dev. It accepts an external
@@ -49,6 +50,18 @@ The package includes `repo-status`, `repo-branch`, and `repo-push`. It scans onl
 immediate child repositories. Branch creation and pushing are explicit operations;
 read [repo-tools/README.md](repo-tools/README.md) for behavior and validation.
 
+## Resume Codex when a usage window resets
+
+```sh
+./codex-sleep/install.sh
+codex-sleep translation-studio 1:49am
+codex-sleep translation-studio 1:49am --caffeinate
+```
+
+Run it from the repository Codex should continue. It sleeps until that local
+time plus one minute, then resumes the named session. Add `--caffeinate` only
+when this Mac might sleep. Details: [codex-sleep/README.md](codex-sleep/README.md).
+
 ## Everyday reference
 
 [Command cheat sheet](docs/command-cheatsheet.md): launch, reconnect, scrolling,
@@ -60,6 +73,7 @@ With tmux, Python 3, and zsh available:
 
 ```sh
 python3 dev/tests/smoke.py
+python3 codex-sleep/tests/smoke.py
 python3 terminal/tests/smoke.py
 python3 repo-tools/repo-status/test_repo_status.py
 python3 repo-tools/repo-branch/test_repo_branch.py

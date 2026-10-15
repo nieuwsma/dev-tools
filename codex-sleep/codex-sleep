@@ -1,0 +1,155 @@
+#!/bin/bash
+# Wait until a local clock time, then resume a Codex session in this directory.
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+Usage: codex-sleep <session> <reset-time> [--caffeinate]
+       codex-sleep --dry-run <session> <reset-time> [--now EPOCH] [--caffeinate]
+
+Example: codex-sleep translation-studio 1:49am
+
+Waits until that local time, plus one minute, then resumes the named Codex
+session from the current directory. A clock time that has already passed today
+waits until tomorrow. Accepted times: 1:49am, 1:49pm, and 01:49.
+
+--caffeinate keeps this Mac awake during the wait and the Codex run. Leave it
+off inside tmux when the Mac is already set to stay awake.
+--dry-run prints the wait and the command without sleeping or starting Codex.
+--now is only for --dry-run and pins the current time as a unix epoch.
+EOF
+}
+
+die() {
+    echo "$1" >&2
+    exit 1
+}
+
+normalize_time() {
+    local raw hour minute meridiem
+    raw=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+    if [[ $raw =~ ^([0-9]{1,2}):([0-9]{2})(am|pm)$ ]]; then
+        hour=$((10#${BASH_REMATCH[1]}))
+        minute=$((10#${BASH_REMATCH[2]}))
+        meridiem=${BASH_REMATCH[3]}
+        (( hour >= 1 && hour <= 12 && minute <= 59 )) || return 1
+        if [[ $meridiem == am ]]; then
+            (( hour == 12 )) && hour=0
+        else
+            (( hour != 12 )) && hour=$((hour + 12))
+        fi
+    elif [[ $raw =~ ^([0-9]{1,2}):([0-9]{2})$ ]]; then
+        hour=$((10#${BASH_REMATCH[1]}))
+        minute=$((10#${BASH_REMATCH[2]}))
+        (( hour <= 23 && minute <= 59 )) || return 1
+    else
+        return 1
+    fi
+    printf '%02d:%02d' "$hour" "$minute"
+}
+
+dry_run=0
+use_caffeinate=0
+now_epoch=
+positionals=()
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help) usage; exit 0 ;;
+        --dry-run) dry_run=1 ;;
+        --caffeinate) use_caffeinate=1 ;;
+        --now)
+            [[ $# -ge 2 && $2 =~ ^[0-9]+$ ]] || die '--now needs a unix epoch'
+            now_epoch=$2
+            shift ;;
+        --)
+            shift
+            positionals+=("$@")
+            break ;;
+        -*) die "Unknown option: $1" ;;
+        *) positionals+=("$1") ;;
+    esac
+    shift
+done
+
+[[ ${#positionals[@]} -eq 2 ]] || { usage >&2; exit 1; }
+[[ -z $now_epoch || $dry_run -eq 1 ]] || die '--now is only valid with --dry-run'
+
+session=${positionals[0]}
+input=${positionals[1]}
+[[ -n $session && $session != -* ]] || die "Invalid session: $session"
+normalized=$(normalize_time "$input") || die "Invalid time: $input
+Examples: 01:49, 1:49, 1:49am"
+
+if [[ -z $now_epoch ]]; then
+    now_epoch=$(date +%s)
+fi
+# Include seconds. BSD date otherwise fills omitted fields from the current clock.
+today=$(date -r "$now_epoch" +%Y-%m-%d)
+target_epoch=$(date -j -f '%Y-%m-%d %H:%M:%S' "$today $normalized:00" +%s 2>/dev/null) || die "Could not parse reset time: $input"
+if (( target_epoch <= now_epoch )); then
+    tomorrow=$(date -r "$now_epoch" -v+1d +%Y-%m-%d)
+    target_epoch=$(date -j -f '%Y-%m-%d %H:%M:%S' "$tomorrow $normalized:00" +%s)
+fi
+# One extra minute lets a quota reset propagate.
+target_epoch=$((target_epoch + 60))
+wait_seconds=$((target_epoch - now_epoch))
+
+resume_prompt='Resume the task from exactly where you left off before the usage limit was reached.
+
+First inspect the current repository and git state to determine what was already completed. Do not redo completed work.
+
+Continue implementing the existing task autonomously. Run appropriate tests and validation as you work. Fix issues you discover that are within the scope of the existing task.
+
+Continue until:
+1. The existing task is complete and validated, or
+2. You encounter an issue that genuinely requires user input.
+
+Do not stop merely to provide a progress update.'
+
+codex_command=(codex exec --approve-for-me --skip-git-repo-check resume "$session" "$resume_prompt")
+if (( use_caffeinate )); then
+    wrapped=(caffeinate -i "${codex_command[@]}")
+else
+    wrapped=("${codex_command[@]}")
+fi
+
+if (( dry_run )); then
+    printf 'session: %s\n' "$session"
+    printf 'resume_at: %s\n' "$target_epoch"
+    printf 'wait_seconds: %s\n' "$wait_seconds"
+    if (( use_caffeinate )); then
+        echo 'caffeinate: yes'
+    else
+        echo 'caffeinate: no'
+    fi
+    printf 'command:'
+    printf ' %q' "${wrapped[@]}"
+    printf '\n'
+    exit 0
+fi
+
+echo
+echo 'Codex resume armed.'
+echo "Session:    $session"
+echo "Directory:  $PWD"
+echo "Resume at:  $(date -r "$target_epoch")"
+echo "Sleeping:   $((wait_seconds / 3600))h $(((wait_seconds % 3600) / 60))m"
+if (( use_caffeinate )); then
+    echo 'Awake:      caffeinate is holding this Mac awake.'
+fi
+echo
+echo 'You can leave this terminal alone.'
+echo
+
+if (( use_caffeinate )); then
+    caffeinate -i sleep "$wait_seconds"
+else
+    sleep "$wait_seconds"
+fi
+
+echo
+echo "[$(date)] Usage window should be reset."
+echo "Resuming Codex session: $session"
+echo
+
+exec "${wrapped[@]}"
